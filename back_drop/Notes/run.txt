@@ -1,0 +1,63 @@
+https://chatgpt.com/c/687cee27-9d58-800e-9995-cdd2081da9f6
+sefinsha257Account
+🌐 Swagger UI → http://localhost:8000/swagger/
+Redoc UI → http://localhost:8000/redoc/
+
+BACK_DROP/            <- main project folder
+├── back_drop/        <- this is where manage.py is (go here to run Django)
+│   ├── manage.py
+│   └── ...
+├── venv/             <- virtual environment
+
+venvsefinsha@Sefinshas-MacBook-Air back_drop % python3 -m venv venv
+venvsefinsha@Sefinshas-MacBook-Air back_drop % cd back_drop
+venvsefinsha@Sefinshas-MacBook-Air back_drop % source ../venv/bin/activate
+(venv) venvsefinsha@Sefinshas-MacBook-Air back_drop % python3 manage.py runserver
+
+
+Superuser (for admin login)
+
+Username: sefinsha
+Email:Sefinsha4@gmail.com 
+Password:Sefin@123
+
+http://127.0.0.1:8000/admin/products/product/
+http://127.0.0.1:8000/api/products/
+
+ COMPLETED TILL NOW:
+Django project (back_drop)
+Virtual environment ✅
+DRF installed ✅
+products app created ✅
+Product model + admin ✅
+Migrations ✅
+DRF Product API live ✅
+http://127.0.0.1:8000/api/token/
+{
+    "refresh": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ0b2tlbl90eXBlIjoicmVmcmVzaCIsImV4cCI6MTc1MzEyMzA3MCwiaWF0IjoxNzUzMDM2NjcwLCJqdGkiOiJhMjc5YWNiZWY2OGI0YjdkYTVkY2I3MTRjZWM5YmEyNyIsInVzZXJfaWQiOjF9.HuuyE5tmPAInU2UYkxd98ZnB1xR5pXRl_r7oJCZwcGo",
+    "access": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ0b2tlbl90eXBlIjoiYWNjZXNzIiwiZXhwIjoxNzUzMDM2OTcwLCJpYXQiOjE3NTMwMzY2NzAsImp0aSI6IjIyNTBiY2ZhZWFlMjQ5NDI4MzFiM2MzOTNjNTQ1MGVmIiwidXNlcl9pZCI6MX0.zhfWrGQBHnF9hHT9Q1jURPpVHMwMGOqWvfzN5Dx062M"
+}
+This token will be used by Angular to access secure endpoints (like product creation, order management, stock update, etc.
+
+
+https://web.postman.co/workspace/My-Workspace~e5ca4335-ae16-4bc3-81ee-217f0c334645/request/create?requestId=f18e8657-1983-4991-81e8-3efe8b2f23cd
+http://127.0.0.1:8000/api/token/
+post {
+  "username": "sefinsha",
+  "password": "Sefin@123"
+}
+{
+    "refresh": "..",
+    "access": ".."
+}
+
+✅ Your Current Progress:
+✅ Django project: back_drop
+✅ DRF installed & set up
+✅ products app created
+✅ Product model + migrations done
+✅ Admin works
+✅ JWT Authentication (token endpoint done)
+
+
+http://127.0.0.1:8000/api/orders/
