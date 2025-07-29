@@ -1,5 +1,7 @@
 https://chatgpt.com/c/687cee27-9d58-800e-9995-cdd2081da9f6
 sefinsha257Account
+
+http://127.0.0.1:8000/admin/
 🌐 Swagger UI → http://localhost:8000/swagger/
 Redoc UI → http://localhost:8000/redoc/
 
@@ -61,3 +63,43 @@ post {
 
 
 http://127.0.0.1:8000/api/orders/
+POST /api/orders/create/ → create new order
+
+GET /api/orders/my-orders/ → list your orders
+
+back_drop/
+├── back_drop/                 # Root Django config
+│   ├── __init__.py
+│   ├── settings.py            # Split settings (optional)
+│   ├── urls.py                # Include all app urls
+│   └── wsgi.py / asgi.py
+│
+├── users/                     # Custom user app
+│   ├── models.py              # Custom User (if extended)
+│   ├── views.py               # Auth views
+│   ├── serializers.py
+│   ├── urls.py
+│   ├── permissions.py
+│   └── tests.py
+│
+├── products/                  # Product catalog
+│   ├── models.py
+│   ├── serializers.py
+│   ├── views.py
+│   ├── urls.py
+│   └── admin.py
+│
+├── orders/                    # Orders and checkout
+│   ├── models.py
+│   ├── views.py
+│   ├── serializers.py
+│   ├── urls.py
+│   └── admin.py
+│
+├── core/                      # Reusable logic, utils, base classes
+│   ├── utils.py
+│   ├── permissions.py
+│   └── decorators.py
+│
+├── manage.py
+└── requirements.txt
