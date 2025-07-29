@@ -47,6 +47,7 @@ INSTALLED_APPS = [
      'corsheaders',
      'users',
     'rest_framework_simplejwt',
+    "cart",
 
 
 ]

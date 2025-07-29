@@ -1,0 +1,129 @@
+📄 API Documentation (Current)
+🔐 Auth Endpoints (users/urls.py)
+Endpoint	Method	Body	Description
+/api/token/	POST	{ "username": "", "password": "" }	Login, returns access & refresh tokens
+/api/token/refresh/	POST	{ "refresh": "" }	Get new access token
+
+👤 User Registration (users/views.py)
+Endpoint	Method	Body	Description
+/api/users/register/	POST	{ "username": "", "email": "", "password": "" }	Register new user
+
+You added this manually in your router via path('register/', RegisterView.as_view())
+
+📦 Product Endpoints (products/views.py assumed)
+Endpoint	Method	Description
+/api/products/	GET	List all products
+/api/products/<id>/	GET	Get one product
+/api/products/	POST	Add new product
+/api/products/<id>/	PUT/PATCH	Update product
+/api/products/<id>/	DELETE	Delete product
+
+Assuming you used ModelViewSet and router.register('products', ProductViewSet) in products/urls.py
+
+📬 Order Endpoints (orders/views.py assumed)
+Endpoint	Method	Description
+/api/orders/	GET	List all orders
+/api/orders/<id>/	GET	Get one order
+/api/orders/	POST	Create order
+/api/orders/<id>/	PUT/PATCH	Update order
+/api/orders/<id>/	DELETE	Delete order
+
+Make sure OrderViewSet uses permission check: only allow owner to see their orders.
+
+🛠 Full Backend Setup Summary
+✅ Installed dependencies: djangorestframework, rest_framework_simplejwt, etc.
+
+✅ Created apps: users, orders, products
+
+✅ Custom user model: CustomUser with unique email.
+
+✅ Set AUTH_USER_MODEL = 'users.CustomUser' in settings.py
+
+✅ JWT auth setup with SimpleJWT
+
+✅ Serializers for registration, products, orders
+
+✅ Views using generics or ModelViewSet
+
+✅ Registered routers in urls.py
+
+✅ Media and static files configured
+
+✅ Admin enabled for all models
+
+📦 Project Structure (Recommended)
+bash
+Copy
+Edit
+back_drop/
+├── back_drop/
+│   ├── settings.py
+│   ├── urls.py
+├── users/
+│   ├── models.py
+│   ├── views.py
+│   ├── urls.py
+│   ├── serializers.py
+├── products/
+│   ├── models.py
+│   ├── views.py
+│   ├── serializers.py
+│   ├── urls.py
+├── orders/
+│   ├── models.py
+│   ├── views.py
+│   ├── serializers.py
+│   ├── urls.py
+🧪 Testing the APIs (Postman or Frontend)
+Register a user
+
+Login and get JWT tokens
+
+Use Authorization: Bearer <access_token> header
+
+Test:
+
+Create products
+
+Create orders
+
+Fetch your orders only
+
+🪪 Permissions Suggestions (Upcoming)
+Products: IsAdminUser or open to all
+
+Orders: IsAuthenticated, restrict to user's own orders
+
+Registration: AllowAny
+
+⏭️ What You Can Do Next:
+Short-Term:
+✅ Finish CORS setup for Angular frontend
+
+⏳ Add permissions to all views
+
+⏳ Write API test cases with pytest or Django test client
+
+⏳ Use .env for sensitive config (SECRET_KEY, etc.)
+
+Mid-Term:
+Add pagination, filtering
+
+Add product images/media uploads
+
+Setup Swagger/OpenAPI for docs (optional)
+
+Related cart
+In cart/urls.py, you added endpoints like:
+
+/api/cart/ → list or add cart items
+
+/api/cart/<id>/ → view/update/delete a specific item
+
+/api/cart/summary/ → shows total items and cost
+
+Recap of Each Endpoint
+Endpoint	Method	Auth	Purpose
+/orders/create/	POST	✅	Create order manually (from JSON body)
+/orders/my-orders/	GET	✅	Get logged-in user’s past orders
+/orders/checkout/	POST	✅	Create order from cart, then clear cart ✅

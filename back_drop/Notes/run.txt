@@ -23,6 +23,11 @@ Username: sefinsha
 Email:Sefinsha4@gmail.com 
 Password:Sefin@123
 
+user register
+Username: Sulthan@123
+Email:Sefinsha256@gmail.com
+Password:Sulthan@123
+
 http://127.0.0.1:8000/admin/products/product/
 http://127.0.0.1:8000/api/products/
 
@@ -103,3 +108,20 @@ back_drop/
 │
 ├── manage.py
 └── requirements.txt
+
+
+🚀 Next Move (Backend Setup Plan)
+Here’s the solid backend structure I recommend:
+
+pgsql
+Copy
+Edit
+back_drop/
+├── back_drop/            ← Main project config (settings.py etc)
+├── users/                ← Authentication logic (login, signup, user profile)
+├── orders/               ← Handle order placement, tracking, etc.
+├── products/             ← If selling items – manage products
+├── media/                ← For user-uploaded files/images
+├── static/               ← Frontend build (for deployment if needed)
+├── utils/                ← Helper functions, custom exceptions, etc.
+└── manage.py
