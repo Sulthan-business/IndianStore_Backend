@@ -3,6 +3,7 @@ from django.db import models
 from django.conf import settings  
 from products.models import Product
 from django.utils import timezone
+from decimal import Decimal
 class Order(models.Model):
     user = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE)
     customer_name = models.CharField(max_length=100)
@@ -19,11 +20,16 @@ class Order(models.Model):
     def __str__(self):
         return f"Order #{self.id} - {self.user.username}"
 
+
+
 class OrderItem(models.Model):
     order = models.ForeignKey(Order, related_name="items", on_delete=models.CASCADE)
     product = models.ForeignKey(Product, on_delete=models.CASCADE)
     quantity = models.PositiveIntegerField(default=1)
-    price = models.DecimalField(max_digits=10, decimal_places=2)  # snapshot price at order time
+
+    # 🟢 Add default values here to fix migration issue
+    unit_price = models.DecimalField(max_digits=10, decimal_places=2, default=Decimal('0.00'))
+    total_price = models.DecimalField(max_digits=10, decimal_places=2, default=Decimal('0.00'))
 
     def __str__(self):
         return f"{self.product.name} x {self.quantity}"
