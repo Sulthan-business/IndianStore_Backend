@@ -1,3 +1,10 @@
+Swagger UI → http://127.0.0.1:8000/api/docs/
+
+Redoc → http://127.0.0.1:8000/api/redoc/
+
+Raw OpenAPI JSON → http://127.0.0.1:8000/api/schema/
+
+
 📄 API Documentation (Current)
 🔐 Auth Endpoints (users/urls.py)
 Endpoint	Method	Body	Description

@@ -1,0 +1,55 @@
+6) Email on order (dev: console backend)
+7) Smoke tests (fast confidence)
+8) Env & Docker (so “corsheaders” never bites again)
+9) Seed data for Angular
+10) Swagger “Authorize” helper
+
+
+
+python manage.py test users -v 2
+python manage.py test products -v 2
+python manage.py test cart -v 2
+python manage.py test orders -v 2
+
+
+Nice-to-have features (after core is solid)
+Recently viewed
+Simple analytics endpoints (sales by day/product)
+
+
+
+P2 — Dev speed & reliability (still free)
+Smoke tests (fast confidence)
+Seed data for local testing
+Health endpoint (for your sanity)
+Admin tune-ups
+
+P3 — “Nice later” (still free, but not urgent)
+Idempotent checkout
+Order status transitions & history
+Lightweight backups
+
+
+🪴 P3 — “Nice later” (still free, but not urgent)
+These are more about polishing and adding depth:
+
+Recently viewed products
+
+Store a list of recently viewed product IDs per user (session or DB).
+
+Simple analytics endpoints
+
+/analytics/sales-by-day/ and /analytics/sales-by-product/ returning JSON.
+
+Idempotent checkout
+
+Prevent accidental double orders if a user clicks checkout twice.
+
+Order status transitions & history
+
+Track changes like Pending → Paid → Shipped → Delivered, with timestamps.
+
+Lightweight backups
+
+A script or cron job to dump the DB to a safe location daily/weekly.
+

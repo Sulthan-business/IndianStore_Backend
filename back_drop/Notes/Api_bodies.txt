@@ -1,0 +1,172 @@
+1) Register a user
+POST /api/users/register/
+
+JSON body
+json
+Copy
+{
+  "username": "sefin",
+  "email": "sefin@example.com",
+  "password": "StrongPass!234"
+}
+curl
+bash
+Copy
+curl -X POST http://127.0.0.1:8000/api/users/register/ \
+  -H "Content-Type: application/json" \
+  -d '{"username":"sefin","email":"sefin@example.com","password":"StrongPass!234"}'
+If the user already exists, you’ll get a 400. That’s fine—just proceed to login.
+
+2) Get JWT tokens
+POST /api/token/
+
+JSON body
+json
+Copy
+{
+  "username": "sefin",
+  "password": "StrongPass!234"
+}
+curl
+bash
+Copy
+curl -X POST http://127.0.0.1:8000/api/token/ \
+  -H "Content-Type: application/json" \
+  -d '{"username":"sefin","password":"StrongPass!234"}'
+Response (example):
+
+json
+Copy
+{
+  "refresh": "<REFRESH_TOKEN>",
+  "access": "<ACCESS_TOKEN>"
+}
+Save <ACCESS_TOKEN> for the next requests:
+
+bash
+Copy
+ACCESS_TOKEN="<ACCESS_TOKEN>"
+3) Add item(s) to cart
+POST /api/cart/
+(Authorization required)
+
+JSON body
+json
+Copy
+{
+  "product": 1,
+  "quantity": 2
+}
+product is the Product ID. Use a real ID that exists in your DB (e.g., from /api/products/).
+
+curl
+bash
+Copy
+curl -X POST http://127.0.0.1:8000/api/cart/ \
+  -H "Authorization: Bearer $ACCESS_TOKEN" \
+  -H "Content-Type: application/json" \
+  -d '{"product":1,"quantity":2}'
+(Add more items by calling again with different product IDs.)
+
+4) Checkout (create order from cart)
+POST /api/orders/checkout/
+(Authorization required)
+
+JSON body
+Usually empty (we take everything from the cart + user). You can send {}.
+
+json
+Copy
+{}
+curl
+bash
+Copy
+curl -X POST http://127.0.0.1:8000/api/orders/checkout/ \
+  -H "Authorization: Bearer $ACCESS_TOKEN" \
+  -H "Content-Type: application/json" \
+  -d '{}'
+Response (example):
+
+json
+Copy
+{
+  "detail": "Order placed successfully",
+  "order_id": 5
+}
+5) See your orders (for that user)
+GET /api/orders/my-orders/
+(Authorization required)
+
+curl
+bash
+Copy
+curl -X GET http://127.0.0.1:8000/api/orders/my-orders/ \
+  -H "Authorization: Bearer $ACCESS_TOKEN"
+Response (example):
+
+json
+Copy
+[
+  {
+    "id": 5,
+    "user": "sefin",
+    "customer_name": "sefin",
+    "customer_email": "sefin@example.com",
+    "status": "PENDING",
+    "ordered_at": "2025-08-07T08:30:10Z",
+    "total_price": "999.98",
+    "items": [
+      {
+        "id": 12,
+        "product": 1,
+        "product_name": "T-shirt",
+        "quantity": 2,
+        "unit_price": "499.99",
+        "total_price": "999.98"
+      }
+    ]
+  }
+]
+6) Confirm cart is cleared
+GET /api/cart/summary/
+(Authorization required)
+
+curl
+bash
+Copy
+curl -X GET http://127.0.0.1:8000/api/cart/summary/ \
+  -H "Authorization: Bearer $ACCESS_TOKEN"
+Expected after successful checkout:
+
+json
+Copy
+{
+  "count": 0,
+  "total_quantity": 0,
+  "total_value": "0.00",
+  "items": []
+}
+Postman setup quickies
+Every request after login:
+Headers → Authorization: Bearer <ACCESS_TOKEN>
+
+Content type for POSTs:
+Headers → Content-Type: application/json
+
+For cart POST: body raw JSON:
+
+json
+Copy
+{"product":1,"quantity":2}
+Common gotchas
+401 Unauthorized → Missing/expired token. Re-login /api/token/ and replace the Bearer token.
+
+405 Method Not Allowed → URL is routed to the wrong view. Confirm with:
+
+bash
+Copy
+python manage.py show_urls | grep -i checkout
+You should see one entry pointing to orders.views.CheckoutView and method POST should now work.
+
+400 Cart is empty → Make sure you successfully added items to /api/cart/ with the same user token.
+

@@ -10,3 +10,8 @@ class CartItemSerializer(serializers.ModelSerializer):
         model = CartItem
         fields = ['id', 'user', 'product', 'product_name', 'quantity', 'added_at']
         read_only_fields = ['id', 'added_at', 'user']
+# cart/serializers.py (or wherever you create CartItem)
+def validate_quantity(self, value):
+    if value <= 0:
+        raise serializers.ValidationError("Quantity must be > 0")
+    return value

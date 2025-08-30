@@ -16,9 +16,14 @@ class OrderSerializer(serializers.ModelSerializer):
     class Meta:
         model = Order
         fields = [
-            'id', 'user', 'customer_name', 'customer_email',
-            'status', 'ordered_at', 'total_price', 'items'
+            "id", "user", "total_price",
+            "payment_method", "payment_status", "status",
+            "cod_allowed_snapshot",
+            "customer_name", "customer_email",
+            "ordered_at", "items"
         ]
+        read_only_fields = ["user", "total_price", "payment_status", "status", "cod_allowed_snapshot", "ordered_at"]
+
 
     def create(self, validated_data):
         items_data = validated_data.pop('items')
@@ -43,3 +48,4 @@ class OrderSerializer(serializers.ModelSerializer):
         order.total_price = total
         order.save()
         return order
+

@@ -1,6 +1,10 @@
 https://chatgpt.com/c/687cee27-9d58-800e-9995-cdd2081da9f6
 sefinsha257Account
+Swagger UI → http://127.0.0.1:8000/api/docs/
 
+Redoc → http://127.0.0.1:8000/api/redoc/
+
+Raw OpenAPI JSON → http://127.0.0.1:8000/api/schema/
 http://127.0.0.1:8000/admin/
 🌐 Swagger UI → http://localhost:8000/swagger/
 Redoc UI → http://localhost:8000/redoc/
@@ -27,6 +31,9 @@ user register
 Username: Sulthan@123
 Email:Sefinsha256@gmail.com
 Password:Sulthan@123
+
+sefinsha
+Sefin@123
 
 http://127.0.0.1:8000/admin/products/product/
 http://127.0.0.1:8000/api/products/
