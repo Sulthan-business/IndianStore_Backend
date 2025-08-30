@@ -63,7 +63,8 @@ class Payment(models.Model):
 
     def __str__(self):
         return f"Payment for Order #{self.order_id} - {self.status}"
-    
+
+
 class FulfillmentStatus(models.TextChoices):
     PENDING = "pending", "Pending"
     PLACED = "placed", "Placed with supplier"
@@ -72,35 +73,36 @@ class FulfillmentStatus(models.TextChoices):
     CANCELLED = "cancelled", "Cancelled"
     FAILED = "failed", "Failed"
 
+
 class Fulfillment(models.Model):
-    order_item = models.OneToOneField(
-        "orders.OrderItem",
+    class Status(models.TextChoices):
+        CREATED = "CREATED", "Created"
+        SENT = "SENT", "Sent to Supplier"
+        ACCEPTED = "ACCEPTED", "Accepted by Supplier"
+        SHIPPED = "SHIPPED", "Shipped"
+        CANCELLED = "CANCELLED", "Cancelled"
+
+    order = models.ForeignKey(
+        "orders.Order",
         on_delete=models.CASCADE,
-        related_name="fulfillment"
+        related_name="order_fulfillments",   # unique reverse name
+        null=True, blank=True                # <- TEMPORARILY allow null
     )
     supplier = models.ForeignKey(
-        "products.Supplier",
-        null=True, blank=True,
-        on_delete=models.SET_NULL,
-        related_name="fulfillments"
+        "suppliers.Supplier",
+        on_delete=models.PROTECT,
+        related_name="order_fulfillments"    # unique reverse name
     )
-    status = models.CharField(
-        max_length=20,
-        choices=FulfillmentStatus.choices,
-        default=FulfillmentStatus.PENDING
-    )
-    external_ref = models.CharField(max_length=100, blank=True)
-    tracking_number = models.CharField(max_length=100, blank=True)
+    status = models.CharField(max_length=12, choices=Status.choices, default=Status.CREATED)
+
+    carrier = models.CharField(max_length=100, blank=True)       # was external_ref
+    tracking_no = models.CharField(max_length=100, blank=True)   # was tracking_number
     tracking_url = models.URLField(blank=True)
-    message = models.TextField(blank=True)
+
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
 
-    class Meta:
-        indexes = [
-            models.Index(fields=["status"]),
-            models.Index(fields=["external_ref"]),
-        ]
+    supplier_subtotal = models.DecimalField(max_digits=10, decimal_places=2, default=0)
 
     def __str__(self):
-        return f"Fulfillment #{self.pk} - {self.status}"
+        return f"Fulfillment #{self.id} for Order #{self.order_id} via {self.supplier}"

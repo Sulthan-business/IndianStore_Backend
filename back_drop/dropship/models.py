@@ -22,8 +22,16 @@ class Fulfillment(models.Model):
         SHIPPED = "SHIPPED", "Shipped"
         CANCELLED = "CANCELLED", "Cancelled"
 
-    order = models.ForeignKey(Order, on_delete=models.CASCADE, related_name="fulfillments")
-    supplier = models.ForeignKey(Supplier, on_delete=models.PROTECT, related_name="fulfillments")
+    order = models.ForeignKey(
+        "orders.Order",
+        on_delete=models.CASCADE,
+        related_name="dropship_fulfillments"   # ✅ different from above
+    )
+    supplier = models.ForeignKey(
+        "suppliers.Supplier",
+        on_delete=models.CASCADE,
+        related_name="dropship_fulfillments"   # ✅ different
+    )
     status = models.CharField(max_length=12, choices=Status.choices, default=Status.CREATED)
 
     # tracking
