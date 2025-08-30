@@ -63,3 +63,44 @@ class Payment(models.Model):
 
     def __str__(self):
         return f"Payment for Order #{self.order_id} - {self.status}"
+    
+class FulfillmentStatus(models.TextChoices):
+    PENDING = "pending", "Pending"
+    PLACED = "placed", "Placed with supplier"
+    CONFIRMED = "confirmed", "Supplier confirmed"
+    SHIPPED = "shipped", "Shipped"
+    CANCELLED = "cancelled", "Cancelled"
+    FAILED = "failed", "Failed"
+
+class Fulfillment(models.Model):
+    order_item = models.OneToOneField(
+        "orders.OrderItem",
+        on_delete=models.CASCADE,
+        related_name="fulfillment"
+    )
+    supplier = models.ForeignKey(
+        "products.Supplier",
+        null=True, blank=True,
+        on_delete=models.SET_NULL,
+        related_name="fulfillments"
+    )
+    status = models.CharField(
+        max_length=20,
+        choices=FulfillmentStatus.choices,
+        default=FulfillmentStatus.PENDING
+    )
+    external_ref = models.CharField(max_length=100, blank=True)
+    tracking_number = models.CharField(max_length=100, blank=True)
+    tracking_url = models.URLField(blank=True)
+    message = models.TextField(blank=True)
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+
+    class Meta:
+        indexes = [
+            models.Index(fields=["status"]),
+            models.Index(fields=["external_ref"]),
+        ]
+
+    def __str__(self):
+        return f"Fulfillment #{self.pk} - {self.status}"

@@ -9,6 +9,7 @@ from products.views import ProductViewSet
 from rest_framework.views import exception_handler as drf_handler
 from orders.views import OrderViewSet, CheckoutView, PaymentWebhookView
 from rest_framework_simplejwt.views import TokenObtainPairView, TokenRefreshView
+from dropship.views import SupplierStatusWebhook
 from drf_spectacular.views import (
     SpectacularAPIView,
     SpectacularSwaggerView,
@@ -46,6 +47,8 @@ urlpatterns = [
      # checkout + payments
     path('api/orders/checkout/', CheckoutView.as_view(), name='order-checkout'),
     path('api/payments/webhook/', PaymentWebhookView.as_view(), name='payments-webhook'),
+
+    path('api/dropship/webhook/', SupplierStatusWebhook.as_view(), name='dropship-webhook'),
 
 ]
 
