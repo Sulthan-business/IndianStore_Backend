@@ -2,6 +2,7 @@ from rest_framework import serializers
 from .models import Order, OrderItem
 from products.models import Product  # needed for product info
 from cart.models import CartItem
+from .models import Fulfillment
 class OrderItemSerializer(serializers.ModelSerializer):
     product_name = serializers.ReadOnlyField(source='product.name')
 
@@ -49,3 +50,9 @@ class OrderSerializer(serializers.ModelSerializer):
         order.save()
         return order
 
+
+class FulfillmentSerializer(serializers.ModelSerializer):
+    supplier_name = serializers.CharField(source="supplier.name", read_only=True)
+    class Meta:
+        model = Fulfillment
+        fields = ["id","supplier","supplier_name","status","tracking_no","created_at"]

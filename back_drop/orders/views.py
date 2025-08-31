@@ -15,7 +15,7 @@ from cart.models import CartItem
 from common.permissions import IsOwner
 from dropship.models import Fulfillment
 logger = logging.getLogger(__name__)
-# ---------- ORDERS CRUD ----------
+
 @extend_schema_view(
     list=extend_schema(tags=["Orders"]),
     retrieve=extend_schema(tags=["Orders"]),
@@ -50,8 +50,7 @@ class OrderListView(generics.ListAPIView):
     permission_classes = [permissions.IsAuthenticated]
     def get_queryset(self):
         return Order.objects.filter(user=self.request.user).order_by("-ordered_at")
-# ---------- CHECKOUT ----------
-# Improved CheckoutView with fixes and enhancements
+
 
 @extend_schema(
     tags=["Orders"],
@@ -81,6 +80,9 @@ class OrderListView(generics.ListAPIView):
         ),
     ],
 )
+
+
+
 class CheckoutView(APIView):
     """
     Converts the authenticated user's cart into an order.
@@ -93,80 +95,85 @@ class CheckoutView(APIView):
         user = request.user
         payment_method = request.data.get("payment_method", Order.PaymentMethod.COD)
 
-        # Load cart
+        # Load cart with related data
         cart_items = (CartItem.objects
                       .filter(user=user)
                       .select_related("product", "product__supplier"))
+        
         if not cart_items.exists():
-            return Response({"detail": "Cart is empty."}, status=status.HTTP_400_BAD_REQUEST)
-
-        # Helper: COD allowed per product
-        def product_allows_cod(p):
-            cod_available = getattr(p, "cod_available", True)
-            cod_allowed   = getattr(p, "cod_allowed",   True)
-            supplier_ok   = (p.supplier is None) or getattr(p.supplier, "cod_supported", True)
-            return bool(cod_available and cod_allowed and supplier_ok)
-
-        all_cod_allowed = all(product_allows_cod(ci.product) for ci in cart_items)
-
-        # Enforce COD rule
-        if payment_method == Order.PaymentMethod.COD and not all_cod_allowed:
-            return Response({"detail": "COD not allowed for one or more items."},
-                            status=status.HTTP_400_BAD_REQUEST)
-
-        # Totals
-        subtotal = sum(ci.product.price * ci.quantity for ci in cart_items)
-
-        # Create order with correct snapshot + status
-        order = Order.objects.create(
-            user=user,
-            total_price=Decimal(subtotal),
-            payment_method=payment_method,
-            payment_status=(
-                Order.PaymentStatus.COD_PENDING
-                if payment_method == Order.PaymentMethod.COD
-                else Order.PaymentStatus.PENDING
-            ),
-            status=(
-                Order.Status.PLACED
-                if payment_method == Order.PaymentMethod.COD
-                else Order.Status.PAYMENT_PENDING
-            ),
-            cod_allowed_snapshot=all_cod_allowed,
-        )
-
-        # Create items + fulfillments
-        for ci in cart_items:
-            oi = OrderItem.objects.create(
-                order=order,
-                product=ci.product,
-                quantity=ci.quantity,
-                unit_price=ci.product.price,
-                total_price=ci.product.price * ci.quantity,
+            return Response(
+                {"detail": "Cart is empty."}, 
+                status=status.HTTP_400_BAD_REQUEST
             )
 
-            # IMPORTANT: avoid class-mismatch by passing supplier_id (int), not instance
-            if ci.product.supplier_id:
-                Fulfillment.objects.create(
-                     order=order, 
-    supplier_id=ci.product.supplier_id,  # always use supplier_id
-    status=(
-        FulfillmentStatus.PLACED
-        if payment_method == Order.PaymentMethod.COD
-        else FulfillmentStatus.PENDING
-    ),
-)
+        # Comprehensive validation
+        validation_errors = self._validate_checkout(cart_items, payment_method, user)
+        if validation_errors:
+            return Response(
+                {"detail": validation_errors[0]}, 
+                status=status.HTTP_400_BAD_REQUEST
+            )
 
-        # (optional) cart_items.delete()
+        # Calculate totals
+        subtotal = self._calculate_total(cart_items)
 
-        return Response({
-            "order_id": order.id,
-            "payment_method": order.payment_method,
-            "cod_allowed_snapshot": order.cod_allowed_snapshot,
-            "total_price": str(order.total_price),
-            "status": order.status,
-            "payment_status": order.payment_status,
-        }, status=status.HTTP_201_CREATED)
+        # Check COD eligibility for all items
+        all_cod_allowed = all(self._product_allows_cod(ci.product) for ci in cart_items)
+
+        # Create order
+        order = self._create_order(
+            user=user,
+            total=subtotal,
+            payment_method=payment_method,
+            cod_allowed=all_cod_allowed
+        )
+
+        # Create order items and fulfillments
+        self._create_order_items_and_fulfillments(order, cart_items)
+
+        # Update stock
+        self._update_stock(cart_items)
+
+        # Handle payment flow
+        if payment_method == Order.PaymentMethod.COD:
+            return self._handle_cod_payment(order, cart_items)
+        else:
+            return self._handle_online_payment(order, subtotal)
+
+    def _validate_checkout(self, cart_items, payment_method, user):
+        """Comprehensive checkout validation"""
+        errors = []
+        
+        # Basic cart validation
+        cart_errors = self._validate_cart_items(cart_items)
+        if cart_errors:
+            errors.extend(cart_errors)
+        
+        # Stock validation
+        stock_error = self._validate_stock(cart_items)
+        if stock_error:
+            errors.append(stock_error)
+        
+        # COD validation
+        if payment_method == Order.PaymentMethod.COD:
+            cod_error = self._validate_cod_eligibility(cart_items, user)
+            if cod_error:
+                errors.append(cod_error)
+        
+        return errors
+
+    def _product_allows_cod(self, product):
+        """Check if a single product allows COD"""
+        # Check product-level COD flags
+        cod_available = getattr(product, "cod_available", True)
+        cod_allowed = getattr(product, "cod_allowed", True)
+        
+        # Check supplier COD support
+        supplier_ok = True
+        if product.supplier:
+            supplier_ok = getattr(product.supplier, "cod_supported", True)
+        
+        return bool(cod_available and cod_allowed and supplier_ok)
 
     def _validate_cart_items(self, cart_items):
         """Validate basic cart item requirements"""
@@ -183,18 +190,12 @@ class CheckoutView(APIView):
 
     def _validate_cod_eligibility(self, cart_items, user):
         """Check if COD is available for all items and user"""
-        # Check if all products allow COD
+        # Check each product's COD eligibility
         for item in cart_items:
-            if not getattr(item.product, "cod_available", False):
+            if not self._product_allows_cod(item.product):
                 return f"COD not available for {item.product.name}"
         
-        # Check supplier COD support (standardize on 'supports_cod')
-        for item in cart_items:
-            supplier = getattr(item.product, 'supplier', None)
-            if supplier and not getattr(supplier, "supports_cod", True):
-                return f"Supplier doesn't support COD for {item.product.name}"
-        
-        # Optional: Check if user has valid address for COD
+        # Check if user has valid address for COD
         if not self._user_has_valid_address(user):
             return "Please add a delivery address for COD orders"
             
@@ -202,7 +203,8 @@ class CheckoutView(APIView):
 
     def _user_has_valid_address(self, user):
         """Check if user has a valid delivery address"""
-        # Implement based on your user/address model
+        # TODO: Implement based on your user/address model
+        # Example: return user.addresses.filter(is_default=True).exists()
         return True  # Placeholder
 
     def _validate_stock(self, cart_items):
@@ -217,20 +219,20 @@ class CheckoutView(APIView):
         """Calculate order total"""
         return sum(item.product.price * item.quantity for item in cart_items)
 
-    def _create_order(self, user, total, method, cart_items):
+    def _create_order(self, user, total, payment_method, cod_allowed):
         """Create the main order record"""
-        cod_allowed = method == "COD"  # Already validated if method is COD
-        
         return Order.objects.create(
             user=user,
-            total_price=total,
-            payment_method=method,
+            total_price=Decimal(total),
+            payment_method=payment_method,
             payment_status=(
-                Order.PaymentStatus.COD_PENDING if method == "COD"
+                Order.PaymentStatus.COD_PENDING 
+                if payment_method == Order.PaymentMethod.COD
                 else Order.PaymentStatus.PENDING
             ),
             status=(
-                Order.Status.PLACED if method == "COD"
+                Order.Status.PLACED 
+                if payment_method == Order.PaymentMethod.COD
                 else Order.Status.PAYMENT_PENDING
             ),
             cod_allowed_snapshot=cod_allowed,
@@ -240,41 +242,36 @@ class CheckoutView(APIView):
 
     def _create_order_items_and_fulfillments(self, order, cart_items):
         """Create order items and fulfillment records"""
-        supplier_totals = defaultdict(Decimal)
-        suppliers = set()
-        
+        # Create order items
         for item in cart_items:
-            # Create order item
-            order_item = OrderItem.objects.create(
+            OrderItem.objects.create(
                 order=order,
                 product=item.product,
                 quantity=item.quantity,
                 unit_price=item.product.price,
                 total_price=item.product.price * item.quantity,
             )
-            
-            # Track supplier info
-            supplier = getattr(item.product, "supplier", None)
-            if supplier:
-                suppliers.add(supplier)
-                # Use dropship_cost if available, else unit_price
-                cost_basis = (
-                    getattr(item.product, 'dropship_cost', order_item.unit_price)
-                    or order_item.unit_price
-                )
-                supplier_totals[supplier] += (cost_basis * order_item.quantity)
+        
+        # Create fulfillments grouped by supplier
+        suppliers = {}
+        for item in cart_items:
+            supplier = item.product.supplier
+            if not supplier:
+                continue
+            suppliers.setdefault(supplier.id, {
+                "supplier": supplier, 
+                "items": []
+            })["items"].append(item)
 
-        # Create fulfillment records
-        for supplier in suppliers:
-           
+        # Create fulfillment records for each supplier
+        for supplier_data in suppliers.values():
             Fulfillment.objects.create(
-                  order=order,  
-                supplier=supplier,
+                order=order, 
+                supplier=supplier_data["supplier"], 
                 status=(
-                    FulfillmentStatus.PLACED
-                    if order.payment_method == Order.PaymentMethod.COD
-                    else FulfillmentStatus.PENDING
-                ),
+                    "placed" if order.payment_method == Order.PaymentMethod.COD
+                    else "pending"
+                )
             )
 
     def _update_stock(self, cart_items):
@@ -282,42 +279,44 @@ class CheckoutView(APIView):
         for item in cart_items:
             if hasattr(item.product, "stock"):
                 item.product.__class__.objects.filter(
-                    pk=item.product_id
+                    pk=item.product.pk
                 ).update(stock=F("stock") - item.quantity)
 
     def _handle_online_payment(self, order, total):
         """Handle online payment flow"""
+        # Create payment record
         payment = Payment.objects.create(
             order=order,
-            provider="stub",  # Replace with real provider
+            provider="stub",  # Replace with real payment gateway
             provider_order_id=f"stub_{order.id}",
             amount=total,
             status=Order.PaymentStatus.PENDING,
         )
         
-        return Response(
-            {
-                "detail": "Payment pending",
-                "order_id": order.id,
-                "pg_order_id": payment.provider_order_id,
-                "amount": str(total),
-            },
-            status=status.HTTP_201_CREATED,
-        )
+        return Response({
+            "detail": "Payment pending",
+            "order_id": order.id,
+            "payment_id": payment.id,
+            "pg_order_id": payment.provider_order_id,
+            "amount": str(total),
+            "status": order.status,
+            "payment_status": order.payment_status,
+        }, status=status.HTTP_201_CREATED)
 
     def _handle_cod_payment(self, order, cart_items):
         """Handle COD payment flow"""
-        # Clear cart immediately for COD orders
+        # Clear cart for successful COD orders
         cart_items.delete()
         
-        return Response(
-            {
-                "detail": "Order placed successfully (COD)", 
-                "order_id": order.id
-            },
-            status=status.HTTP_201_CREATED,
-        )
-# ---------- PAYMENT WEBHOOK (STUB) ----------
+        return Response({
+            "detail": "Order placed successfully (COD)",
+            "order_id": order.id,
+            "payment_method": order.payment_method,
+            "total_price": str(order.total_price),
+            "status": order.status,
+            "payment_status": order.payment_status,
+            "cod_allowed_snapshot": order.cod_allowed_snapshot,
+        }, status=status.HTTP_201_CREATED)
 class PaymentWebhookView(APIView):
     """
     Stub webhook endpoint. When you integrate a real gateway:

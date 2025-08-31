@@ -1,5 +1,6 @@
 # products/models.py
 from django.db import models
+from suppliers.models import Supplier
 
 
 class Product(models.Model):
@@ -11,16 +12,11 @@ class Product(models.Model):
     cod_allowed = models.BooleanField(default=True)
     image = models.ImageField(upload_to='product_images/', null=True, blank=True)
     created_at = models.DateTimeField(auto_now_add=True)
-    
-    # Reference to suppliers app
+
     supplier = models.ForeignKey(
-        "suppliers.Supplier",  # Note: suppliers.Supplier, not products.Supplier
-        on_delete=models.SET_NULL, 
-        null=True, 
-        blank=True,
-        related_name='products'
+        Supplier, on_delete=models.SET_NULL, null=True, blank=True, related_name="products"
     )
-    
+
     supplier_sku = models.CharField(max_length=100, blank=True)
     dropship_cost = models.DecimalField(max_digits=10, decimal_places=2, null=True, blank=True)
     cost_price = models.DecimalField(max_digits=10, decimal_places=2, default=0)
@@ -30,7 +26,7 @@ class Product(models.Model):
 
     @property
     def is_cod_allowed(self):
-        if not self.cod_allowed:
+        if not self.cod_allowed or not self.cod_available:
             return False
         if self.supplier and not self.supplier.cod_supported:
             return False

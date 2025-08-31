@@ -106,3 +106,5 @@ class Fulfillment(models.Model):
 
     def __str__(self):
         return f"Fulfillment #{self.id} for Order #{self.order_id} via {self.supplier}"
+    
+
