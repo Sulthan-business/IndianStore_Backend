@@ -9,14 +9,15 @@ https://docs.djangoproject.com/en/5.2/topics/settings/
 For the full list of settings and their values, see
 https://docs.djangoproject.com/en/5.2/ref/settings/
 """
+from dotenv import load_dotenv
 
 from pathlib import Path
-
+import dj_database_url
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
 BASE_DIR = Path(__file__).resolve().parent.parent
-
+load_dotenv()
 import os
-
+DATABASE_URL = os.environ.get('DATABASE_URL')
 MEDIA_URL = '/media/'
 MEDIA_ROOT = os.path.join(BASE_DIR, 'media')
 MEDIA_ROOT = BASE_DIR / 'media'
@@ -36,6 +37,8 @@ ALLOWED_HOSTS = []
 
 INSTALLED_APPS = [
     "corsheaders",
+    "cloudinary_storage",
+    "cloudinary",
     "dropship",
     "suppliers",
     "django.contrib.admin",
@@ -44,6 +47,7 @@ INSTALLED_APPS = [
     "django.contrib.sessions",
     "django.contrib.messages",
     "django.contrib.staticfiles",
+    'django_filters',
     "rest_framework",
     "drf_spectacular",
     "drf_spectacular_sidecar",  # optional
@@ -129,12 +133,17 @@ WSGI_APPLICATION = 'back_drop.wsgi.application'
 
 # Database
 # https://docs.djangoproject.com/en/5.2/ref/settings/#databases
-
 DATABASES = {
-    'default': {
-        'ENGINE': 'django.db.backends.sqlite3',
-        'NAME': BASE_DIR / 'db.sqlite3',
-    }
+    'default': dj_database_url.config(
+        default=os.environ.get('DATABASE_URL'),
+        conn_max_age=600,
+        ssl_require=True
+    )
+}
+CLOUDINARY_STORAGE = {
+    'CLOUD_NAME': 'dxocw9fbp',
+    'API_KEY': '482415486273724',
+    'API_SECRET': os.environ.get('CLOUDINARY_API_SECRET')
 }
 EMAIL_BACKEND = "django.core.mail.backends.console.EmailBackend"
 DEFAULT_FROM_EMAIL = "no-reply@example.local"
@@ -183,3 +192,12 @@ STATIC_URL = 'static/'
 DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
 
 
+# Cloudinary Configuration (From your screenshot)
+CLOUDINARY_STORAGE = {
+    'CLOUD_NAME': 'dxocw9fbp',
+    'API_KEY': '482415486273724',
+    'API_SECRET': '83_SRAUjaQGaxqouULmy7L97MkA' # Click the 'eye' icon in your screenshot to see this
+}
+
+# Tell Django to use Cloudinary for Media files
+DEFAULT_FILE_STORAGE = 'cloudinary_storage.storage.MediaCloudinaryStorage'

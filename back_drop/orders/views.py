@@ -14,6 +14,7 @@ from .serializers import OrderSerializer
 from cart.models import CartItem
 from common.permissions import IsOwner
 from dropship.models import Fulfillment
+
 logger = logging.getLogger(__name__)
 
 @extend_schema_view(
@@ -49,8 +50,11 @@ class OrderListView(generics.ListAPIView):
     serializer_class = OrderSerializer
     permission_classes = [permissions.IsAuthenticated]
     def get_queryset(self):
+        # Fix for documentation generator
+        if getattr(self, "swagger_fake_view", False):
+            return Order.objects.none()
+            
         return Order.objects.filter(user=self.request.user).order_by("-ordered_at")
-
 
 @extend_schema(
     tags=["Orders"],
@@ -327,7 +331,11 @@ class PaymentWebhookView(APIView):
     """
     authentication_classes = []  # use HMAC or similar in real integration
     permission_classes = []
-
+    @extend_schema(
+        tags=["Orders"],
+        request=None, # Or create a simple Serializer for the webhook body
+        responses={200: OpenApiResponse(description="Payment captured")},
+    )
     def post(self, request):
         provider_order_id = request.data.get("provider_order_id")
         provider_payment_id = request.data.get("provider_payment_id", "")

@@ -9,12 +9,22 @@ http://127.0.0.1:8000/admin/
 🌐 Swagger UI → http://localhost:8000/swagger/
 Redoc UI → http://localhost:8000/redoc/
 
+
+new venv craeation 
+python3 -m venv venv
+source venv/bin/activate
+pip install -r requirements.txt
+
+
+
+
 BACK_DROP/            <- main project folder
 ├── back_drop/        <- this is where manage.py is (go here to run Django)
 │   ├── manage.py
 │   └── ...
-├── venv/             <- virtual environment
+├── venv/             <- virtual environmentpwd
 
+CD VR_envirnment
 venvsefinsha@Sefinshas-MacBook-Air back_drop % python3 -m venv venv
 venvsefinsha@Sefinshas-MacBook-Air back_drop % cd back_drop
 venvsefinsha@Sefinshas-MacBook-Air back_drop % source ../venv/bin/activate
@@ -32,8 +42,8 @@ Username: Sulthan@123
 Email:Sefinsha256@gmail.com
 Password:Sulthan@123
 
-sefinsha
-Sefin@123
+  sefinsha
+  Sefin@123
 
 http://127.0.0.1:8000/admin/products/product/
 http://127.0.0.1:8000/api/products/

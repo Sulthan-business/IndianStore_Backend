@@ -1,3 +1,7 @@
-1) Model: add status + tracking_no
+What I still need from you (quick)
 
-start from here 
+Confirm: keep no online payment for now (only COD), or also add basic Razorpay/Stripe later? (We can keep code paths ready: payment_method="ONLINE" creates order with status="paid" after callback.)
+
+Do you want supplier webhooks later, or manual admin fulfillment is enough for phase 1?
+
+Once you paste the snippets above and run migrations/tests, backend core is complete for a dropshipping MVP with COD, supplier ownership, cancel/ship, emails, docs, and tests. Then we jump to the Angular screens.

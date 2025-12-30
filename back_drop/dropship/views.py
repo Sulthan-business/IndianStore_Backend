@@ -3,11 +3,14 @@ from rest_framework.views import APIView
 from rest_framework.response import Response
 from rest_framework.permissions import AllowAny
 from .models import Fulfillment
-
+from drf_spectacular.utils import extend_schema
 class SupplierStatusWebhook(APIView):
     authentication_classes = []
     permission_classes = [AllowAny]  # add HMAC later
-
+    @extend_schema(
+        tags=["Dropship Webhooks"],
+        responses={200: {"type": "object", "properties": {"detail": {"type": "string"}}}}
+    )
     def post(self, request):
         # expect { "fulfillment_id": 123, "status": "SHIPPED", "carrier": "...", "tracking_no": "...", "tracking_url": "..." }
         fid = request.data.get("fulfillment_id")
